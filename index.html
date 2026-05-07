@@ -830,6 +830,23 @@ const info = obj[s] || {status: defaultStatus};
       createdAt: serverTimestamp()
     });
 
+    await fetch("https://line-booking-notify.notrainbowfish.workers.dev", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        brand: "妘紜美學",
+        name,
+        contact,
+        date: inquiryDate,
+        period: inquirySlot,
+        periodLabel: slotName[inquirySlot],
+        service,
+        note
+      })
+    });
+
     document.getElementById("inquiryHint").textContent = "已收到您的預約詢問，實際時間將由妘紜美學確認後回覆。";
     setTimeout(closeInquiry, 900);
   }
