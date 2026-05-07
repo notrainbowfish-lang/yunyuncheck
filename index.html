@@ -562,7 +562,7 @@ aside{
       <button id="closeInquiry">取消</button>
       <button id="sendInquiry">送出詢問</button>
     </div>
-    <div class="sync" style="padding:10px 0 0" id="inquiryHint">送出後不代表預約成立，會由妘紜美學確認後回覆。</div>
+    <div class="sync" style="padding:10px 0 0" id="inquiryHint">送出後會開啟京采美緹官方 LINE，請在 LINE 內送出訊息，實際時間以回覆確認為主。</div>
   </div>
 </div>
 
@@ -792,7 +792,7 @@ const info = obj[s] || {status: defaultStatus};
     document.getElementById("inquiryContact").value = "";
     document.getElementById("inquiryService").value = "";
     document.getElementById("inquiryNote").value = "";
-    document.getElementById("inquiryHint").textContent = "送出後不代表預約成立，會由妘紜美學確認後回覆。";
+    document.getElementById("inquiryHint").textContent = "送出後會開啟京采美緹官方 LINE，請在 LINE 內送出訊息，實際時間以回覆確認為主。";
     document.getElementById("inquiryModal").classList.add("show");
   }
 
@@ -830,24 +830,25 @@ const info = obj[s] || {status: defaultStatus};
       createdAt: serverTimestamp()
     });
 
-    await fetch("https://line-booking-notify.notrainbowfish.workers.dev", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        brand: "妘紜美學",
-        name,
-        contact,
-        date: inquiryDate,
-        period: inquirySlot,
-        periodLabel: slotName[inquirySlot],
-        service,
-        note
-      })
-    });
+    const message =
+`您好，我想預約：
 
-    document.getElementById("inquiryHint").textContent = "已收到您的預約詢問，實際時間將由妘紜美學確認後回覆。";
+【妘紜美學】預約詢問
+姓名：${name}
+聯絡方式：${contact || "未填寫"}
+日期：${inquiryDate}
+時段：${slotName[inquirySlot]}
+項目：${service}
+
+特殊需求／備註：
+${note || "無"}
+
+＊實際預約時間請以京采美緹確認回覆為主。`;
+
+    const lineUrl = "https://line.me/R/oaMessage/%40673aexfc/?" + encodeURIComponent(message);
+    window.location.href = lineUrl;
+
+    document.getElementById("inquiryHint").textContent = "即將開啟京采美緹官方 LINE，請在 LINE 內送出預約訊息。";
     setTimeout(closeInquiry, 900);
   }
 
