@@ -551,6 +551,14 @@ aside{
       <input id="inquiryContact" placeholder="例：IG帳號／電話／LINE名稱，可不填">
     </div>
     <div class="row">
+      <label>日期</label>
+      <select id="inquiryDateSelect"></select>
+    </div>
+    <div class="row">
+      <label>時段</label>
+      <select id="inquiryPeriodSelect"></select>
+    </div>
+    <div class="row">
       <label>想預約項目</label>
       <input id="inquiryService" placeholder="例：臉部保養、身體調理、頭皮檢測">
     </div>
@@ -787,7 +795,54 @@ const info = obj[s] || {status: defaultStatus};
     inquiryDate = date;
     inquirySlot = slot;
 
-    document.getElementById("inquiryTitle").textContent = `${date}｜${slotName[slot]} 預約詢問`;
+    const dateSelect = document.getElementById("inquiryDateSelect");
+    const periodSelect = document.getElementById("inquiryPeriodSelect");
+    const availableMap = {};
+
+    document.querySelectorAll(".slot").forEach(el => {
+      const statusEl = el.querySelector(".status-text");
+      if(statusEl && statusEl.classList.contains("status-available")){
+        const d = el.dataset.date;
+        const s = el.dataset.slot;
+
+        if(!availableMap[d]) availableMap[d] = [];
+        if(!availableMap[d].includes(s)){
+          availableMap[d].push(s);
+        }
+      }
+    });
+
+    const dateKeys = Object.keys(availableMap).sort();
+    dateSelect.innerHTML = "";
+    dateKeys.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      dateSelect.appendChild(opt);
+    });
+
+    function renderPeriods(selectedDate){
+      periodSelect.innerHTML = "";
+      (availableMap[selectedDate] || []).forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = slotName[s];
+        periodSelect.appendChild(opt);
+      });
+    }
+
+    dateSelect.onchange = () => {
+      renderPeriods(dateSelect.value);
+    };
+
+    dateSelect.value = availableMap[date] ? date : (dateKeys[0] || "");
+    renderPeriods(dateSelect.value);
+
+    if((availableMap[dateSelect.value] || []).includes(slot)){
+      periodSelect.value = slot;
+    }
+
+    document.getElementById("inquiryTitle").textContent = "預約詢問";
     document.getElementById("inquiryName").value = "";
     document.getElementById("inquiryContact").value = "";
     document.getElementById("inquiryService").value = "";
@@ -803,6 +858,8 @@ const info = obj[s] || {status: defaultStatus};
   async function sendInquiry(){
     const name = document.getElementById("inquiryName").value.trim();
     const contact = document.getElementById("inquiryContact").value.trim();
+    const selectedDate = document.getElementById("inquiryDateSelect").value;
+    const selectedSlot = document.getElementById("inquiryPeriodSelect").value;
     const service = document.getElementById("inquiryService").value.trim();
     const note = document.getElementById("inquiryNote").value.trim();
 
@@ -821,9 +878,9 @@ const info = obj[s] || {status: defaultStatus};
       source: "booking-page",
       name,
       contact,
-      date: inquiryDate,
-      period: inquirySlot,
-      periodLabel: slotName[inquirySlot],
+      date: selectedDate,
+      period: selectedSlot,
+      periodLabel: slotName[selectedSlot],
       service,
       note,
       status: "pending",
@@ -836,8 +893,8 @@ const info = obj[s] || {status: defaultStatus};
 【妘紜美學】預約詢問
 姓名：${name}
 聯絡方式：${contact || "未填寫"}
-日期：${inquiryDate}
-時段：${slotName[inquirySlot]}
+日期：${selectedDate}
+時段：${slotName[selectedSlot]}
 項目：${service}
 
 特殊需求／備註：
